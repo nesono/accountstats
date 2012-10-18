@@ -1,0 +1,30 @@
+```{r}
+# some preparations...
+# load the data
+dat <- read.csv( '2012-10-17 gehalt.csv', header=T )
+# change date to be a real date
+dat$Buchungstag <- as.POSIXlt(as.Date(dat$Buchungstag))
+# remove clutter
+dat <- subset( dat, select=c(Betrag, Buchungstag,Kategorie))
+# get range of date
+range.data <- range(dat$Buchungstag)
+ydat <- split( dat, as.factor(dat$Buchungstag$year+1900) )
+```
+
+# Konto Zustandsbericht 
+
+Zeitraum: `r range.data[1]` bis `r range.data[2]`
+
+## Gesamttrend der Bilanzen jeden Jahres
+
+Der folgende Graph zeigt Verlauf der Jahresendbilanzen über den gesamten Zeitraum
+
+```{r}
+# get sum of all expenses/income for each year
+balances <- sapply( ydat, function(x){ sum(x$Betrag) })
+# show summary with a bar plot
+barplot( as.numeric(balances), names.arg=names(balances),
+         width=0.5, col=(as.numeric(balances)<0)+1,
+         main='Bilanzverlauf',
+         xlab='Bilanzjahr', ylab='Bilanzwert' )
+```
