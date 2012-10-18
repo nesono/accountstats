@@ -15,7 +15,7 @@ ydat <- split( dat, as.factor(dat$Buchungstag$year+1900) )
 
 Zeitraum: `r range.data[1]` bis `r range.data[2]`
 
-## Gesamttrend der Bilanzen jeden Jahres
+## Gesamttrend der Bilanzen über die Jahre
 
 Der folgende Graph zeigt Verlauf der Jahresendbilanzen über den gesamten Zeitraum
 
