@@ -56,7 +56,10 @@ for( year in names(ydat)) {
 
 ## Monatliche Aufstellung
 
-Die folgenden Abschnitte zeigen die monatlichen Aufstellungen über die vorhandene Laufzeit
+Die folgenden Abschnitte zeigen die monatlichen Aufstellungen über die vorhandene Laufzeit.
+Es werden in einzelnen `barplots` alle Ein- und Ausgaben kategorisch in aufsteigender Reihenfolge dargestellt.
+Die Sortierung erfolgt hierbei von maximaler Ausgabe zu mazimaler Einnahme.
+Ausgaben werden rot und Einnahmen schwarz dargestellt.
 
 ```{r Monatsaufstellung, results='asis', eval=TRUE, echo=FALSE, fig.align='center', fig.cap=''}
 monat <- c('Januar','Februar','März','April','Mai','Juni','Juli',
@@ -67,11 +70,7 @@ for( year in rev(names(ydat))) {
   tydat <- ydat[[year]]
   mdat <- split( tydat, as.factor(tydat$Buchungstag$mon+1) )
   
-  for( month in rev(names(mdat))) {
-    cat( paste('#### Monat', monat[as.numeric(month)], year, '\n\n' ) )
-    cat( 'In der Aufstellung werden alle Ein- und Ausgaben des Wertes nach sortiert.\n' )
-    cat( 'Wobei Ausgaben rot und Einnahmen schwarz gekennzeichnet werden\n\n' )
-    
+  for( month in rev(names(mdat))) {    
     tmdat <- mdat[[month]]
     sums <- by( tmdat, tmdat$Kategorie, function(x){ sum(x$Betrag)}  )
     vals <- na.omit(as.matrix(sums))
@@ -80,13 +79,14 @@ for( year in rev(names(ydat))) {
 
     par(las=2)
     par(mar=c(8,4.5,3.5,0.1))
+    layout(matrix(c(1,1,1,2), 1, 4, byrow = TRUE))
+    par(cex=1.2)
     barplot( tmp, 
              names.arg=names(tmp),
              col=(as.numeric(tmp)<0)+1,
              border='white',
              main=paste('Aufstellung',month,'\'',year))
     
-    cat('\n\nIm folgenden wird die Einzelbilanz des Monats dargestellt.\n\n')
     
     debit <- as.numeric(tmp)<0
     credit <- !debit
@@ -94,9 +94,9 @@ for( year in rev(names(ydat))) {
              names.arg=c('Ausgaben','Einnahmen'),
              col=c(2,1),
              border='white',
-             main=paste('Bilanz',month,'\'',year) )
+             main='Bilanz' )
 
-    cat('\n\n')
+    #cat('\n\n')
     }
 }
 ```
