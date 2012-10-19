@@ -1,7 +1,7 @@
-```{r}
+```{r initialization, eval=TRUE, echo=FALSE}
 # some preparations...
 # load the data
-dat <- read.csv( '2012-10-17 gehalt.csv', header=T )
+dat <- read.csv( '2012-10-19 gehalt.csv', header=T )
 # change date to be a real date
 dat$Buchungstag <- as.POSIXlt(as.Date(dat$Buchungstag))
 # remove clutter
@@ -13,18 +13,90 @@ ydat <- split( dat, as.factor(dat$Buchungstag$year+1900) )
 
 # Konto Zustandsbericht 
 
-Zeitraum: `r range.data[1]` bis `r range.data[2]`
+Konto: Gehaltskonto
+
+``` {r Zeitraum, eval=TRUE, echo=FALSE, results='asis'}
+cat(paste('Für den Zeitraum vom', range.data[1], 'bis zum', range.data[2]))
+```
 
 ## Gesamttrend der Bilanzen über die Jahre
 
-Der folgende Graph zeigt Verlauf der Jahresendbilanzen über den gesamten Zeitraum
+Der folgende Graph zeigt Verlauf der Jahresendbilanzen über den gesamten Zeitraum. 
+Die Jahresbilanz berechnet sich aus der Summer aller Buchungsbeträge innerhalb eines Jahres über alle Kategorien hinweg.
 
-```{r}
+```{r Bilanzverlauf, eval=TRUE, echo=FALSE, fig.align='center', fig.cap='Bilanzverlauf über alle Datensätze'}
 # get sum of all expenses/income for each year
 balances <- sapply( ydat, function(x){ sum(x$Betrag) })
 # show summary with a bar plot
 barplot( as.numeric(balances), names.arg=names(balances),
-         width=0.5, col=(as.numeric(balances)<0)+1,
-         main='Bilanzverlauf',
+         width=0.1, col=(as.numeric(balances)<0)+1, border='white',
          xlab='Bilanzjahr', ylab='Bilanzwert' )
+```
+
+Die folgenden Tabellen enthalten die Kontostände mit Aufstellung der wichtigsten Ein- und Ausgabekategorien
+
+```{r Jahreskonten, results='asis', eval=TRUE, echo=FALSE}
+for( year in names(ydat)) {
+  cat( paste('| Ausgaben || Einnahmen ||\n',sep='' ) )
+  cat( '| :-- | --: | :-- | --: |\n' )
+  tydat <- ydat[[year]]
+  sums <- by( tydat, tydat$Kategorie, function(x){ sum(x$Betrag)}  )
+  vals <- na.omit(as.matrix(sums))
+  # sort data frame
+  tmp <- vals[order(vals),]
+  
+  end <- length(tmp)
+  for( index in seq(4) ){
+    cat( paste('|',names(tmp)[index], '|', round(tmp[index]),
+               '|',names(tmp)[end-index+1], '|', round(tmp[end-index+1]), '|\n') )
+  }
+  cat( paste('[Jahresbilanz für', year,']\n\n' ) )
+}
+```
+
+## Monatliche Aufstellung
+
+Die folgenden Abschnitte zeigen die monatlichen Aufstellungen über die vorhandene Laufzeit
+
+```{r Monatsaufstellung, results='asis', eval=TRUE, echo=FALSE, fig.align='center', fig.cap=''}
+monat <- c('Januar','Februar','März','April','Mai','Juni','Juli',
+           'August','September','Oktober','November','Dezember')
+for( year in rev(names(ydat))) {
+  cat( paste('### Aufstellung für', year, '\n\n' ) )
+  
+  tydat <- ydat[[year]]
+  mdat <- split( tydat, as.factor(tydat$Buchungstag$mon+1) )
+  
+  for( month in rev(names(mdat))) {
+    cat( paste('#### Monat', monat[as.numeric(month)], year, '\n\n' ) )
+    cat( 'In der Aufstellung werden alle Ein- und Ausgaben des Wertes nach sortiert.\n' )
+    cat( 'Wobei Ausgaben rot und Einnahmen schwarz gekennzeichnet werden\n\n' )
+    
+    tmdat <- mdat[[month]]
+    sums <- by( tmdat, tmdat$Kategorie, function(x){ sum(x$Betrag)}  )
+    vals <- na.omit(as.matrix(sums))
+    # sort data frame
+    tmp <- vals[order(vals),]
+
+    par(las=2)
+    par(mar=c(8,4.5,3.5,0.1))
+    barplot( tmp, 
+             names.arg=names(tmp),
+             col=(as.numeric(tmp)<0)+1,
+             border='white',
+             main=paste('Aufstellung',month,'\'',year))
+    
+    cat('\n\nIm folgenden wird die Einzelbilanz des Monats dargestellt.\n\n')
+    
+    debit <- as.numeric(tmp)<0
+    credit <- !debit
+    barplot( c(-sum(tmp[debit]),sum(tmp[credit])),
+             names.arg=c('Ausgaben','Einnahmen'),
+             col=c(2,1),
+             border='white',
+             main=paste('Bilanz',month,'\'',year) )
+
+    cat('\n\n')
+    }
+}
 ```
