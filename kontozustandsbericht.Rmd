@@ -54,31 +54,54 @@ for( year in names(ydat)) {
 }
 ```
 
-## Monatliche Aufstellung
+# Monatliche Aufstellungen
 
 Die folgenden Abschnitte zeigen die monatlichen Aufstellungen über die vorhandene Laufzeit.
 Es werden in einzelnen `barplots` alle Ein- und Ausgaben kategorisch in aufsteigender Reihenfolge dargestellt.
-Die Sortierung erfolgt hierbei von maximaler Ausgabe zu mazimaler Einnahme.
+Die Sortierung erfolgt hierbei von maximaler Ausgabe zu maximaler Einnahme.
 Ausgaben werden rot und Einnahmen schwarz dargestellt.
 
-```{r Monatsaufstellung, results='asis', eval=TRUE, echo=FALSE, fig.align='center', fig.cap=''}
+```{r Monatsaufstellung, results='asis', eval=TRUE, echo=FALSE, fig.width=7, fig.height=6, fig.align='center', fig.cap=''}
 monat <- c('Januar','Februar','März','April','Mai','Juni','Juli',
            'August','September','Oktober','November','Dezember')
 for( year in rev(names(ydat))) {
-  cat( paste('### Aufstellung für', year, '\n\n' ) )
+  cat( paste('#', year, '\n\n' ) )
   
   tydat <- ydat[[year]]
+  yearvolute <- by( tydat, as.factor(tydat$Buchungstag$mon+1), function(x){sum(x$Betrag)} )
+  
+  cat( 'Gesamtentwicklung des Jahres über alle Monate hinweg\n' )
+  cat( 'Die gestrichelte horizontale Linie gibt den gemittelten Gewinn/Verlust pro Monat wieder\n' )
+  cat( '\n' )
+  
+  orig.par <- par(las=2)
+  par(mar=c(8,4.5,3.5,0.1))
+  layout(matrix(c(1), 1, 1, byrow = TRUE))
+  barplot( yearvolute, 
+           names.arg=monat[as.numeric(names(yearvolute))],
+           col=(as.numeric(yearvolute)<0)+1,
+           border='white',
+           ylab='Gewinn / Verlust' )
+  yearavg <- mean(yearvolute)
+  col <- 'black'
+  if( yearavg < 0 )
+    col <- 'red'
+  abline(h=yearavg, lty=2, col=col )
+  #axis( 1, at=as.numeric(names(yearvolute)), labels=monat[as.numeric(names(yearvolute))] )
+  cat('\n\n')
+  
   mdat <- split( tydat, as.factor(tydat$Buchungstag$mon+1) )
   
-  for( month in rev(names(mdat))) {    
+  for( month in rev(names(mdat))) {  
+    cat(paste('##',monat[as.numeric(month)],year,'\n\n'))
     tmdat <- mdat[[month]]
     sums <- by( tmdat, tmdat$Kategorie, function(x){ sum(x$Betrag)}  )
     vals <- na.omit(as.matrix(sums))
     # sort data frame
     tmp <- vals[order(vals),]
-
-    par(las=2)
-    par(mar=c(8,4.5,3.5,0.1))
+    
+#     par(las=2)
+#     par(mar=c(8,4.5,3.5,0.1))
     layout(matrix(c(1,1,1,2), 1, 4, byrow = TRUE))
     par(cex=1.2)
     barplot( tmp, 
@@ -87,16 +110,25 @@ for( year in rev(names(ydat))) {
              border='white',
              main=paste('Aufstellung',month,'\'',year))
     
+    cat('\n\n')
     
     debit <- as.numeric(tmp)<0
     credit <- !debit
+    balance <- sum(tmdat$Betrag)
+    balstr <- paste(round(balance))
+    bal.col <- 'black'
+    if( balance < 0 )
+      bal.col <- 'red'
+    
     barplot( c(-sum(tmp[debit]),sum(tmp[credit])),
              names.arg=c('Ausgaben','Einnahmen'),
              col=c(2,1),
              border='white',
-             main='Bilanz' )
+             main='' )
+    title( main=balstr, col.main=bal.col )
 
-    #cat('\n\n')
+    cat('\n\n')
     }
+  par(orig.par)
 }
 ```
