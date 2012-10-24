@@ -16,7 +16,10 @@ ydat <- split( dat, as.factor(dat$Buchungstag$year+1900) )
 Konto: Gehaltskonto
 
 ``` {r Zeitraum, eval=TRUE, echo=FALSE, results='asis'}
-cat(paste('Für den Zeitraum vom', range.data[1], 'bis zum', range.data[2]))
+cat(paste('Für den Zeitraum vom', range.data[1], 'bis zum', range.data[2],'\n'))
+cat(paste('Der Zeitraum entspricht',range.data[2]-range.data[1], 'Tage\n'))
+last.booking <- range.data[2]
+first.booking <- range.data[1]
 ```
 
 ## Gesamttrend der Bilanzen über die Jahre
@@ -131,4 +134,16 @@ for( year in rev(names(ydat))) {
     }
   par(orig.par)
 }
+```
+
+# Faktorenanalyse
+
+```{r results='asis', echo=FALSE, eval=TRUE}
+mdat <- split( dat, as.factor((dat$Buchungstag$year+1900)*1000+dat$Buchungstag$mon+1) )
+anal.dat <- mdat[(length(mdat)-12):length(mdat)]
+anal.table <- sapply( anal.dat, function( x ) { by( x, x$Kategorie, function(y){sum(y$Betrag)}) } )
+# set NA to zero - assume no income/expense
+anal.table[is.na(anal.table)] <- 0
+# ... we now have a table with years in the cols and categories in the rows ...
+# and we might need it just the other way around :/
 ```
