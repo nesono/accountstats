@@ -1,7 +1,13 @@
 ```{r initialization, eval=TRUE, echo=FALSE}
 # some preparations...
+# get your data as 
+# * tab delimited 
+# * with '.' as comma
+# * iso-format date
+# * csv file
+#
 # load the data
-dat <- read.csv( '2012-10-19 gehalt.csv', header=T )
+dat <- read.delim( 'kreditkarte.csv', header=TRUE, as.is=TRUE )
 # change date to be a real date
 dat$Buchungstag <- as.POSIXlt(as.Date(dat$Buchungstag))
 # remove clutter
@@ -39,7 +45,7 @@ barplot( as.numeric(balances), names.arg=names(balances),
 Die folgenden Tabellen enthalten die Kontostände mit Aufstellung der wichtigsten Ein- und Ausgabekategorien
 
 ```{r Jahreskonten, results='asis', eval=TRUE, echo=FALSE}
-for( year in names(ydat)) {
+for( year in rev(names(ydat))) {
   cat( paste('| Ausgaben || Einnahmen ||\n',sep='' ) )
   cat( '| :-- | --: | :-- | --: |\n' )
   tydat <- ydat[[year]]
@@ -138,12 +144,24 @@ for( year in rev(names(ydat))) {
 
 # Faktorenanalyse
 
-```{r results='asis', echo=FALSE, eval=TRUE}
-mdat <- split( dat, as.factor((dat$Buchungstag$year+1900)*1000+dat$Buchungstag$mon+1) )
-anal.dat <- mdat[(length(mdat)-12):length(mdat)]
+Im folgenden bauen wir ein lineares model von der Abhängigkeit der monatlichen Bilanz von den einzelnen Kategorien.
+
+```{r Faktorenanalyse, results='asis', echo=FALSE, eval=TRUE}
+# split data by month
+mdat <- split( dat, as.factor((dat$Buchungstag$year+1900)*100+dat$Buchungstag$mon+1) )
+# cut out last year (12 months)
+anal.dat <- mdat[(length(mdat)-13):(length(mdat)-1)]
+# apply sum by category
 anal.table <- sapply( anal.dat, function( x ) { by( x, x$Kategorie, function(y){sum(y$Betrag)}) } )
 # set NA to zero - assume no income/expense
 anal.table[is.na(anal.table)] <- 0
+# add monthly sum
+anal.table <- rbind(anal.table,total=colSums(anal.table))
 # ... we now have a table with years in the cols and categories in the rows ...
 # and we might need it just the other way around :/
+# we get that with transpose -> t()
+anal.table <- t(anal.table)
+fit.data <- cumsum(as.data.frame(anal.table))
+# create the linear model
+fit <- lm( total ~ ., data=fit.data )
 ```
