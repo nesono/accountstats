@@ -1,3 +1,12 @@
+# Please do the following steps to update the data file:
+# * open kontostats.xlx with excel
+# * remove rows above header
+# * save file
+# * open file in LibreOffice
+# * change Date format to ISO
+# * save as visakarte.csv
+# * using tab delimiter
+
 # script to
 # * read balance from visakarte.csv
 # * plot some stats
@@ -36,4 +45,4 @@ plot( data$Date, data$Balance,
       type='h', lend=2, lwd=3,
       xlab='Date', ylab='Balance' )
 abline( lm( Balance ~ Date, data ) )
-abline( lm( Balance ~ Date, data[difftime( Sys.time(), data$Date ) < 90,] ), col='red' )
+abline( lm( Balance ~ Date, data[difftime( Sys.time(), data$Date, units=c("days") ) < 60,] ), col='red' )
