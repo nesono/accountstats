@@ -1,7 +1,7 @@
 # Please do the following steps to update the data file:
 # * open kontostats.xlx with excel
 # * remove rows above header
-# * save file
+# * save to visakarte.xlsx
 # * open file in LibreOffice
 # * change Date format to ISO
 # * save as visakarte.csv
@@ -11,9 +11,11 @@
 # * read balance from visakarte.csv
 # * plot some stats
 
-data <- read.delim( 'visakarte.csv' )
+require(gdata)
+newfile <- 'kontotransactionlist.xls'
+datafile <- 'kontotransactionlist.csv'
 
-# BEGIN HELPER FUNCTIONS
+# HELPER FUNCTIONS
 readnumbers <- function(xi)
 {
   # remove whitespaces and change komma to period
@@ -22,27 +24,64 @@ readnumbers <- function(xi)
 
 sanetizedata <- function(x)
 {
-  # remove columns with NA values
   x <- x[,colSums (is.na(x)) == 0]
-  # convert date to be real date
-  x$Date <- as.POSIXct( x$Transaction.date )
+  if( sum(colnames(x)=='Transaktionsdatum') > 0) {
+    x$Date <- as.POSIXct( x$Transaktionsdatum )
+    
+    x$Balance <- readnumbers(x$Saldo)
+    x$Amount <- readnumbers(x$Belopp)
+  } else {
+    x$Date <- as.POSIXct( x$Date )
+  }
   
-  # convert balance to real numbers
-  x$Balance <- readnumbers(x$Balance)
-  x$Amount <- readnumbers(x$Amount)
-  
-  return (x)
+  return (subset(x, select=c('Text','Date','Balance','Amount')))
 }
-# END HELPER FUNCTIONS
 
-# stanetize data
+regression_line <- function(dataset, col, linetype)
+{
+  model <- lm( Balance ~ Date, dataset )
+  slope <- signif(coefficients(model)[2], 3)
+  abline( model, lty=linetype, col=ifelse(slope>0,col,'red'), lwd=2 )
+  secondsPerDay <- 60*60*24
+  label <- paste( '(', slope * secondsPerDay, ' SEK/d)', sep='' )
+  
+  return(label)
+}
+
+# check if there is new data
+if( file.exists(newfile) ) {
+  newdata <- read.xls(newfile)
+  newdata <- sanetizedata(newdata)
+  newdata <- newdata[order(newdata$Date),]
+  
+  olddata <- read.delim( datafile )
+  olddata <- sanetizedata(olddata)
+  olddata <- olddata[order(olddata$Date),]
+  data <- merge(olddata, newdata, all=TRUE)
+  data <- data[order(data$Date),]
+  write.table(data, datafile, row.names=FALSE, sep='\t')
+}
+
+data <- read.delim( datafile )
+
+# MAIN PROCESSING
 data <- sanetizedata(data)
+data <- data[order(data$Date),]
 
-# order by transaction date
-data <- data[order(data$Transaction.date),]
-
-plot( data$Date, data$Balance, 
+plot( data$Date, data$Balance,
       type='h', lend=2, lwd=3,
-      xlab='Date', ylab='Balance' )
-abline( lm( Balance ~ Date, data ) )
-abline( lm( Balance ~ Date, data[difftime( Sys.time(), data$Date, units=c("days") ) < 60,] ), col='red' )
+      xlab='Date', ylab='Balance in SEK' )
+
+label.all <- regression_line( data,
+                              'black',
+                              2 )
+label.last100 <- regression_line( data[difftime( Sys.time(), data$Date, units=c("days") ) < 100,],
+                                  'gray',
+                                  4 )
+
+title('Kontoverlauf')
+legend('topleft', 
+       legend=paste(c('Gesamt','Letzte 100d'),
+                    c(label.all, label.last100)), 
+       lty=c(2,4), col=c('black','gray') )
+
