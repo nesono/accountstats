@@ -11,7 +11,11 @@
 # * read balance from visakarte.csv
 # * plot some stats
 
-require(gdata)
+if(!require(gdata)){
+  install.packages('gdata')
+  require(gdata)
+}
+
 newfile <- 'kontotransactionlist.xls'
 datafile <- 'kontotransactionlist.csv'
 
@@ -75,13 +79,21 @@ plot( data$Date, data$Balance,
 label.all <- regression_line( data,
                               'black',
                               2 )
-label.last100 <- regression_line( data[difftime( Sys.time(), data$Date, units=c("days") ) < 100,],
+
+N <- 100
+data.lastN <- data[difftime( Sys.time(), data$Date, units=c("days") ) < N,]
+label.lastN <- regression_line( data.lastN,
                                   'gray',
                                   4 )
 
+min.lastN <- min(data.lastN$Balance)
+abline(h=min.lastN, col='steelblue', lty=3, lwd=2)
+mtext(paste(min.lastN), side=4, at=min.lastN, col='steelblue', line=.5 )
+
 title('Kontoverlauf')
 legend('topleft', 
-       legend=paste(c('Gesamt','Letzte 100d'),
-                    c(label.all, label.last100)), 
-       lty=c(2,4), col=c('black','gray') )
+       legend=paste(c('Gesamt','Letzte','Min der letzten'),
+                    c(label.all, N, N),
+                    c('',label.lastN,'d')), 
+       lty=c(2,4,3), col=c('black','gray','steelblue'), lwd=2 )
 
