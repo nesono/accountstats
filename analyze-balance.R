@@ -56,7 +56,7 @@ balance_label <- function(balance, color)
 {
   mtext(format(balance, big.mark=","), side=4, 
         at=balance, col=color, line=.5,
-        las=1, cex=.7 )
+        las=1, cex=1 )
 }
 
 # check if there is new data
@@ -81,7 +81,7 @@ data <- data[order(data$Date),]
 
 # lay out plot
 par(mar=c(0, 4, 4, 5)+0.1)
-layout(matrix(c(1,1,1,2), 4, 1, byrow = TRUE))
+layout(matrix(c(1,2), 2, 1), heights=c(3,1))
 
 # draw balance plot frame
 plot( data$Date, data$Balance,
@@ -138,7 +138,7 @@ par(mar=c(5, 4, -0.1, 5)+0.1)
 # plot revenue
 plot( data$Date, abs(data$Amount),
       type='n',
-      xlab='Date', ylab='Amount in SEK', bty='u' )
+      xlab='Date', ylab='Diff', bty='u' )
 grid()
 points( data$Date, abs(data$Amount),
       col=ifelse(data$Amount>0, '#A0E191', '#F2A398'),
