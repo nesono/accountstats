@@ -1,12 +1,3 @@
-# Please do the following steps to update the data file:
-# * open kontostats.xlx with excel
-# * remove rows above header
-# * save to kontotransactionlist.xls as word 97 format
-
-# script to
-# * read balance from visakarte.csv
-# * plot some stats
-
 source('helpers.R')
 
 datafile <- 'kontotransactionlist.csv'

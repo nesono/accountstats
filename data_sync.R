@@ -1,3 +1,8 @@
+# Please do the following steps to update the data file:
+# * open kontostats.xlx with excel
+# * remove rows above header
+# * save to Workbook1.xlsx (next to this script)
+
 if(!require(readxl)){
   install.packages('readxl')
   require(readxl)
