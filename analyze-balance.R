@@ -7,39 +7,12 @@
 # * read balance from visakarte.csv
 # * plot some stats
 
-if(!require(gdata)){
-  install.packages('gdata')
-  require(gdata)
-}
-if(!require(plotrix)){
-  install.packages('plotrix')
-  require(plotrix)
-}
+source('helpers.R')
 
-newfile <- 'kontotransactionlist.xls'
 datafile <- 'kontotransactionlist.csv'
 
-# HELPER FUNCTIONS
-readnumbers <- function(xi)
-{
-  # remove whitespaces and change komma to period
-  sapply( xi, function(xii){as.numeric(gsub(' ', '', gsub(',', '.', xii ) ))} )
-}
-
-sanetizedata <- function(x)
-{
-  x <- x[,colSums (is.na(x)) == 0]
-  if( sum(colnames(x)=='Transaktionsdatum') > 0) {
-    x$Date <- as.POSIXct( x$Transaktionsdatum )
-    
-    x$Balance <- readnumbers(x$Saldo)
-    x$Amount <- readnumbers(x$Belopp)
-  } else {
-    x$Date <- as.POSIXct( x$Date )
-  }
-  
-  return (subset(x, select=c('Text','Date','Balance','Amount')))
-}
+data <- read.delim( datafile )
+data <- sanetizedata(data)
 
 regression_line <- function(dataset, col, linetype)
 {
@@ -59,25 +32,12 @@ balance_label <- function(balance, color)
         las=1, cex=1 )
 }
 
-# check if there is new data
-if( file.exists(newfile) ) {
-  newdata <- read.xls(newfile)
-  newdata <- sanetizedata(newdata)
-  newdata <- newdata[order(newdata$Date),]
-  
-  olddata <- read.delim( datafile )
-  olddata <- sanetizedata(olddata)
-  olddata <- olddata[order(olddata$Date),]
-  data <- merge(olddata, newdata, all=TRUE)
-  data <- data[order(data$Date),]
-  write.table(data, datafile, row.names=FALSE, sep='\t')
+if( FALSE )
+{
+data <- data[grep('D 1', data$Text, invert=TRUE),]
+data$Balance <- cumsum(data$Amount)
 }
 
-data <- read.delim( datafile )
-
-# MAIN PROCESSING
-data <- sanetizedata(data)
-data <- data[order(data$Date),]
 
 # lay out plot
 par(mar=c(0, 4, 4, 5)+0.1)
@@ -138,7 +98,7 @@ par(mar=c(5, 4, -0.1, 5)+0.1)
 # plot revenue
 plot( data$Date, abs(data$Amount),
       type='n',
-      xlab='Date', ylab='Diff', bty='u' )
+      xlab='Date', ylab='Delta', bty='n', yaxt='n' )
 grid()
 points( data$Date, abs(data$Amount),
       col=ifelse(data$Amount>0, '#A0E191', '#F2A398'),
