@@ -25,7 +25,7 @@ balance_label <- function(balance, color)
 
 if( FALSE )
 {
-data <- data[grep('D 1', data$Text, invert=TRUE),]
+data <- data[grep('D ', data$Text, invert=TRUE),]
 data$Balance <- cumsum(data$Amount)
 }
 
