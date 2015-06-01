@@ -2,6 +2,10 @@ if(!require(ggplot2)){
   install.packages('ggplot2')
   require(ggplot2)
 }
+if(!require(gridExtra)){
+  install.packages('gridExtra')
+  require(gridExtra)
+}
 
 source('helpers.R')
 
@@ -10,24 +14,15 @@ datafile <- 'kontotransactionlist.csv'
 data <- read.delim( datafile )
 data <- sanetizedata(data)
 
-# regression_line <- function(dataset, col, linetype)
-# {
-#   model <- lm( Balance ~ Date, dataset )
-#   slope <- signif(coefficients(model)[2], 3)
-#   abline( model, lty=linetype, col=ifelse(slope>0,col,'#F2A398'), lwd=1 )
-#   secondsPerDay <- 60*60*24
-#   label <- paste( '(', slope * secondsPerDay, ' SEK/d)', sep='' )
-#   
-#   return(label)
-# }
-# 
-# balance_label <- function(balance, color)
-# {
-#   mtext(format(balance, big.mark=","), side=4, 
-#         at=balance, col=color, line=.5,
-#         las=1, cex=1 )
-# }
 
+g.balance <- ggplot( data=data, aes(x=Date, y=Balance/1000), color="green")
+g.balance <- g.balance + ylab("Balance/1000 SEK") + xlab("Transaction Date")
+g.balance <- g.balance + geom_line(colour = 'green3') + geom_smooth(colour='black')
 
-# gg <- ggplo
+col.sign <- c('red3','green3')
+col.bar <- col.sign[(sign(data$Amount)+1)/2+1]
+g.volume <- ggplot( data=data, aes(Date, abs(Amount/1000))) + ylab("Volume")
+g.volume <- g.volume + ylab("Volume/1000 SEK") + xlab("Transaction Date")
+g.volume <- g.volume + geom_bar(colour=col.bar, stat = "identity")
 
+grid.arrange(g.balance, g.volume, nrow=2)
