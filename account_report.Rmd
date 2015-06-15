@@ -28,7 +28,7 @@ data <- sanetizedata(data)
 
 
 g.balance <- ggplot( data=data, aes(x=Date, y=Balance), color="green")
-g.balance <- g.balance + ylab("Balance k SEK") + xlab("Transaction Date")
+g.balance <- g.balance + ylab("Balance SEK") + xlab("Transaction Date")
 g.balance <- g.balance + geom_line(colour = 'green3') + geom_smooth(colour='black') + scale_y_continuous(labels=comma)
 print(g.balance)
 ```
@@ -41,7 +41,7 @@ The transfer volume graph lets easily spot peaks in volume transfers, i.e. when 
 col.sign <- c('red3','green3')
 col.bar <- col.sign[(sign(data$Amount)+1)/2+1]
 g.volume <- ggplot( data=data, aes(Date, abs(Amount))) + ylab("Volume")
-g.volume <- g.volume + ylab("Volume k SEK") + xlab("Transaction Date")
+g.volume <- g.volume + ylab("Volume SEK") + xlab("Transaction Date")
 g.volume <- g.volume + geom_bar(colour=col.bar, stat = "identity") + scale_y_continuous(labels=comma)
 
 print(g.volume)
