@@ -1,0 +1,52 @@
+---
+title: "Account Report"
+output: html_document
+---
+
+Account report for Handelsbanken account. Data formatting might have to be modified if used for different accounts/banks.
+
+# Overall Development
+
+The overall development shows changes of the account's assets over time since the start of the account.
+
+## Account Balance
+
+The account balance is the most popular metric and shows simply the level of cash in the account.
+
+```{r, echo=FALSE, message=FALSE}
+if(!require(ggplot2)){
+  install.packages('ggplot2')
+  require(ggplot2)
+}
+library(scales)
+source('helpers.R')
+
+datafile <- 'kontotransactionlist.csv'
+
+data <- read.delim( datafile )
+data <- sanetizedata(data)
+
+
+g.balance <- ggplot( data=data, aes(x=Date, y=Balance), color="green")
+g.balance <- g.balance + ylab("Balance k SEK") + xlab("Transaction Date")
+g.balance <- g.balance + geom_line(colour = 'green3') + geom_smooth(colour='black') + scale_y_continuous(labels=comma)
+print(g.balance)
+```
+
+## Transfer Volume
+
+The transfer volume graph lets easily spot peaks in volume transfers, i.e. when large chunks have been moved around
+
+```{r, echo=FALSE}
+col.sign <- c('red3','green3')
+col.bar <- col.sign[(sign(data$Amount)+1)/2+1]
+g.volume <- ggplot( data=data, aes(Date, abs(Amount))) + ylab("Volume")
+g.volume <- g.volume + ylab("Volume k SEK") + xlab("Transaction Date")
+g.volume <- g.volume + geom_bar(colour=col.bar, stat = "identity") + scale_y_continuous(labels=comma)
+
+print(g.volume)
+```
+
+# Monthly Analysis
+
+Here we will add a `for-loop` that goes through all months and visualizes certain assets of the account
